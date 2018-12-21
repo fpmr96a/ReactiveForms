@@ -1,7 +1,20 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder, Validators } from'@angular/forms';
+import { FormGroup, FormBuilder, Validators, AbstractControl, ValidatorFn } from'@angular/forms';
 
 import { Customer } from './customer';
+
+function ratingRange(min: number, max: number): ValidatorFn {
+  return (c: AbstractControl): { [key: string]: boolean } | null => {
+    // Returns NULL if valid. If NOT a number, less than MIN or greater than MAX, then invalid.
+    // When invalid, returns TRUE along with a key / value pair. That key ('range') may be referenced
+    // in the HTML in the Span for the error message.
+    // ====================================================================================
+    if (c.value != null && (isNaN(c.value) || c.value < min || c.value > max)) {
+      return { 'range': true };
+    }
+    return null;
+    }
+}
 
 @Component({
   selector: 'app-customer',
@@ -21,6 +34,7 @@ export class CustomerComponent implements OnInit {
       email: ['',     [Validators.required, Validators.email]],
       phone: '',
       notification: 'email',
+      rating: [null, ratingRange(1,5)],
       sendCatalog: true
     });
   }
