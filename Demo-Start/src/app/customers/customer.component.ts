@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder, Validators, AbstractControl, ValidatorFn } from'@angular/forms';
+import { debounceTime } from 'rxjs/operators';
 
 import { Customer } from './customer';
 
@@ -74,9 +75,14 @@ export class CustomerComponent implements OnInit {
       value => this.setNotification(value)
     );
 
-    // Re-evaluate email control every time it changes.
+    // Re-evaluate email control for errors after 1000 (1 second)
+    // from when user input stops, so that error message not
+    // displaying while user trying to enter the value.
+    // ===========================================================
     const emailControl = this.customerForm.get('emailGroup.email');
-    emailControl.valueChanges.subscribe(
+      emailControl.valueChanges.pipe(
+        debounceTime(1000)
+      ).subscribe(
       value => this.setMessage(emailControl)
     );
 
