@@ -42,6 +42,14 @@ function ratingRange(min: number, max: number): ValidatorFn {
 export class CustomerComponent implements OnInit {
   customerForm: FormGroup;
   customer = new Customer();
+  emailMessage: string;
+
+  // May want to get these from a back-end server in a real app
+  // ==========================================================
+  private validationMessages = {
+      required: 'Please enter your email address.',
+      email: 'Please enter a valid email address'
+  };
 
   constructor(private fb: FormBuilder) { }
 
@@ -58,6 +66,20 @@ export class CustomerComponent implements OnInit {
       rating: [null, ratingRange(1, 5)],
       sendCatalog: true
     });
+
+    // When the notification control value changes, fire the 
+    // setNotification validation logic
+    // ==========================================================
+    this.customerForm.get('notification').valueChanges.subscribe(
+      value => this.setNotification(value)
+    );
+
+    // Re-evaluate email control every time it changes.
+    const emailControl = this.customerForm.get('emailGroup.email');
+    emailControl.valueChanges.subscribe(
+      value => this.setMessage(emailControl)
+    );
+
   }
 
   populateTestData(): void {
@@ -73,6 +95,20 @@ export class CustomerComponent implements OnInit {
   save() {
     console.log(this.customerForm);
     console.log('Saved: ' + JSON.stringify(this.customerForm.value));
+  }
+
+  // Display appropriate error message. The way this works is that the
+  // emailGroup.email control is passed in. The validators set up
+  // are 'required' or 'email' and that lives in c.errors.  That is
+  // looked up in the validationMessages structure to pull the right
+  // error message and the {{ emailMessage }} displayed on screen.
+  // ==================================================================
+  setMessage(c: AbstractControl): void{
+    this.emailMessage = '';
+    if ((c.touched || c.dirty) && c.errors) {
+      this.emailMessage = Object.keys(c.errors).map(
+        key => this.emailMessage += this.validationMessages[key]).join(' ');
+    }
   }
 
   setNotification(notifyVia: string): void {
